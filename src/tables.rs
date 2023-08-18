@@ -13,8 +13,7 @@ impl CodonEncoder {
         }
         CodonEncoder { tab: vec }
     }
-    pub fn encode3(&self, n: &str) -> usize {
-        let cod = n.as_bytes();
+    pub fn encode3(&self, cod: &[u8]) -> usize {
         if cod.len() < 3 {
             0
         } else {
@@ -206,14 +205,14 @@ fn general_codon2aa(ambiguous_map: &HashMap<char, &'static str>,
 }
 
 
-pub fn build_table(nuc_tab : &CodonEncoder) -> Vec<char> {
-    let mut vec = vec!['X'; 16*16*16];
+pub fn build_table(nuc_tab : &CodonEncoder) -> Vec<u8> {
+    let mut vec = vec![b'X'; 16*16*16];
     let codon2aa_tab = codon2aa();
     let ambiguous_map = ambiguous2nucs();
 
     for c in generate_all_codons(ambiguous_map.keys().cloned().collect()) {
         if let Some(aa) = general_codon2aa(&ambiguous_map, &codon2aa_tab, &c) {
-            vec[nuc_tab.encode3(&c)] = aa;
+            vec[nuc_tab.encode3(c.as_bytes())] = aa as u8;
         }
     }
     vec
