@@ -137,23 +137,39 @@ fn ambiguous2nucs() -> HashMap<char, &'static str> {
     map
 }
 
-fn expand_all_ambiguous_nucs(map: &HashMap<char, &'static str>, codon: &str) -> Vec<String> {
-    let mut results = Vec::new();
+fn ambiguous_codon2aa(map: &HashMap<char, &'static str>, codon: &str) -> Option<char> {
+    let mut result = None;
 
     if codon.len() != 3 {
-        return results;
+        return result;
     }
 
     let chars: Vec<char> = codon.chars().collect();
     for n1 in map[&chars[0]].chars() {
         for n2 in map[&chars[1]].chars() {
             for n3 in map[&chars[2]].chars() {
-                results.push(format!("{}{}{}", n1, n2, n3));
+                let nc = format!("{}{}{}", n1, n2, n3);
+                if let Some(aa) = codon2aa().get(&nc[..]) {
+                    if result.is_none() {
+                        result = Some(*aa);
+                    } else if result.unwrap() != *aa {
+                        return None;
+                    }
+                }
             }
         }
     }
 
-    results
+    result
+}
+
+#[test]
+fn test_ambiguous2aa() {
+    assert!(ambiguous_codon2aa(&ambiguous2nucs(), "MGR") == Some('R'));
+    assert!(ambiguous_codon2aa(&ambiguous2nucs(), "TGN") == None);
+    assert!(ambiguous_codon2aa(&ambiguous2nucs(), "TGY") == Some('C'));
+    assert!(ambiguous_codon2aa(&ambiguous2nucs(), "TGT") == Some('C'));
+    assert!(ambiguous_codon2aa(&ambiguous2nucs(), "TGC") == Some('C'));
 }
 
 
@@ -179,39 +195,25 @@ fn generate_all_codons(alphabet : Vec<char>) -> Vec<String> {
     codons
 }
 
+fn general_codon2aa(ambiguous_map: &HashMap<char, &'static str>,
+                    codon2aa_tab: &HashMap<&'static str, char>,
+                    c : &str) -> Option<char> {
+    if c.chars().all(|ch| "ACGT".contains(ch)) {
+        codon2aa_tab.get(&c).map(|&aa| aa)
+    } else {
+        ambiguous_codon2aa(&ambiguous_map, &c)
+    }
+}
+
 
 pub fn build_table(nuc_tab : &CodonEncoder) -> Vec<char> {
     let mut vec = vec!['X'; 16*16*16];
-    let codon2aa_fn = codon2aa();
+    let codon2aa_tab = codon2aa();
     let ambiguous_map = ambiguous2nucs();
 
     for c in generate_all_codons(ambiguous_map.keys().cloned().collect()) {
-        if c.chars().all(|ch| "ACGT".contains(ch)) {
-            if let Some(&aa) = codon2aa_fn.get(&c.as_str()) {
-                vec[nuc_tab.encode3(&c)] = aa;
-            }
-        } else {
-            let mut prev: Option<char> = None;
-            let mut all_same = true;
-
-            for n in expand_all_ambiguous_nucs(&ambiguous_map, &c) {
-                if let Some(&aa) = codon2aa_fn.get(&n.as_str()) {
-                    if let Some(prev_a) = prev {
-                        if aa != prev_a {
-                            all_same = false;
-                            break;
-                        }
-                    } else {
-                        prev = Some(aa);
-                    }
-                }
-            }
-
-            if all_same {
-                if let Some(aa) = prev {
-                    vec[nuc_tab.encode3(&c)] = aa;
-                }
-            }
+        if let Some(aa) = general_codon2aa(&ambiguous_map, &codon2aa_tab, &c) {
+            vec[nuc_tab.encode3(&c)] = aa;
         }
     }
     vec
