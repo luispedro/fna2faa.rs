@@ -18,6 +18,10 @@ struct Args {
     #[arg(short, long)]
     frame: Option<usize>,
 
+    /// Stop translation when first stop codon is found
+    #[arg(short = 's', long)]
+    first_stop: bool,
+
 }
 
 fn main() {
@@ -44,6 +48,7 @@ fn main() {
             let codon = &seq[start_ix..start_ix + 3];
             let aa = encoded_table.get(nuc_tab.encode3(codon)).unwrap();
             prot.push(*aa);
+            if args.first_stop && *aa == b'*' { break; }
             start_ix += 3;
         }
         let nrecord = fasta::Record::with_attrs(record.id(), None, &prot[..]);
