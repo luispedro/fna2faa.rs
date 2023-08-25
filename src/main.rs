@@ -1,5 +1,7 @@
 use bio::io::fasta;
 use std::io;
+use std::io::Write;
+
 
 pub mod tables;
 pub mod molbio;
@@ -42,7 +44,7 @@ fn main() {
     let encoded_table = tables::build_table(&nuc_tab);
 
     let reader = fasta::Reader::new(io::BufReader::new(std::fs::File::open(fname).unwrap()));
-    let mut writer = fasta::Writer::new(io::stdout());
+    let mut writer = io::BufWriter::new(io::stdout());
 
     let mut prot = Vec::new();
     let mut rseq = Vec::new();
@@ -65,9 +67,20 @@ fn main() {
                     if args.first_stop && aa == b'*' { break; }
                     start_ix += 3;
                 }
-                let nid = format!("{}:{}:{}", record.id(), frame % 3, if frame > 2 { "1" } else { "0" });
-                let nrecord = fasta::Record::with_attrs(&nid, None, &prot[..]);
-                writer.write_record(&nrecord).unwrap();
+                writer.write(b">").unwrap();
+                writer.write(record.id().as_bytes()).unwrap();
+                match frame {
+                    0 => { writer.write(b":0:0\n").unwrap(); }
+                    1 => { writer.write(b":1:0\n").unwrap(); }
+                    2 => { writer.write(b":2:0\n").unwrap(); }
+                    3 => { writer.write(b":0:1\n").unwrap(); }
+                    4 => { writer.write(b":1:1\n").unwrap(); }
+                    5 => { writer.write(b":2:1\n").unwrap(); }
+                    _ => { unreachable!(); }
+                }
+                writer.write(&prot).unwrap();
+                writer.write(b"\n").unwrap();
+
             }
         } else {
             let seq = if rc { molbio::rev_compl_to(record.seq(), &mut rseq); &rseq } else { &dseq };
@@ -80,8 +93,11 @@ fn main() {
                 if args.first_stop && aa == b'*' { break; }
                 start_ix += 3;
             }
-            let nrecord = fasta::Record::with_attrs(record.id(), None, &prot[..]);
-            writer.write_record(&nrecord).unwrap();
+            writer.write(b">").unwrap();
+            writer.write(record.id().as_bytes()).unwrap();
+            writer.write(b"\n").unwrap();
+            writer.write(&prot).unwrap();
+            writer.write(b"\n").unwrap();
         }
     }
 }
