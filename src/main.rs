@@ -51,13 +51,13 @@ fn main() {
 
     for record in reader.records() {
         let record = record.unwrap();
-        let dseq = record.seq().to_vec();
+        let fseq = record.seq();
         // It is very ugly to repeat the code, but all the solutions I tried
         // had a 5-10% performance penalty.
         if args.all_frames {
-            molbio::rev_compl_to(record.seq(), &mut rseq);
+            molbio::rev_compl_to(fseq, &mut rseq);
             for frame in 0..6 {
-                let seq = if frame > 2 { &rseq } else { &dseq };
+                let seq = if frame > 2 { &rseq } else { fseq };
                 prot.clear();
                 let mut start_ix = frame % 3;
                 while (start_ix + 3) <= seq.len() {
@@ -83,7 +83,7 @@ fn main() {
 
             }
         } else {
-            let seq = if rc { molbio::rev_compl_to(record.seq(), &mut rseq); &rseq } else { &dseq };
+            let seq = if rc { molbio::rev_compl_to(fseq, &mut rseq); &rseq } else { fseq };
             prot.clear();
             let mut start_ix = frame;
             while (start_ix + 3) <= seq.len() {
@@ -100,5 +100,6 @@ fn main() {
             writer.write(b"\n").unwrap();
         }
     }
+    writer.flush().unwrap();
 }
 
