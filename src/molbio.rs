@@ -1,12 +1,14 @@
 /// Reverse complement a DNA string
-pub fn rev_compl(seq: &[u8]) -> Vec<u8> {
-    let mut res = Vec::with_capacity(seq.len());
+pub fn rev_compl_to(seq: &[u8], res: &mut Vec<u8>) {
+    res.clear();
+    res.reserve(seq.len());
     for c in seq.iter().rev() {
         res.push(match c {
             b'A' => b'T',
             b'T' => b'A',
             b'G' => b'C',
             b'C' => b'G',
+
             // Uracyl becomes A
             b'U' => b'A',
 
@@ -24,8 +26,7 @@ pub fn rev_compl(seq: &[u8]) -> Vec<u8> {
             b'X' => b'X',
             b'N' => b'N',
 
-            _ => panic!("Invalid character in sequence"),
+            _ => *c,
         });
     }
-    res
 }
