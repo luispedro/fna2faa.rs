@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 bio = "*"
+clap = { version = "4.4.0", features = ["derive"] }
