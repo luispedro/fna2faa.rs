@@ -30,3 +30,18 @@ pub fn rev_compl_to(seq: &[u8], res: &mut Vec<u8>) {
         });
     }
 }
+
+
+
+#[test]
+fn test_rc() {
+    fn rc(seq: &[u8]) -> Vec<u8> {
+        let mut res = Vec::with_capacity(seq.len());
+        rev_compl_to(seq, &mut res);
+        res
+    }
+    assert!(rc(b"ATTC") == b"GAAT");
+    assert!(rc(b"TTNN") == b"NNAA");
+    assert!(rc(b"AUMW") == b"WKAT");
+}
+
