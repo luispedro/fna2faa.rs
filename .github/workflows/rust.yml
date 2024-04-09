@@ -26,3 +26,6 @@ jobs:
       run: |
         cargo run examples/gmsc10.fna > examples/gmsc10.faa.out
         diff examples/gmsc10.faa examples/gmsc10.faa.out
+
+        cargo run examples/gmsc10.fna -o examples/gmsc10.faa.out.cmd
+        diff examples/gmsc10.faa examples/gmsc10.faa.out.cmd

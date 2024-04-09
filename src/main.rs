@@ -28,6 +28,11 @@ struct Args {
     #[arg(short, long)]
     all_frames : bool,
 
+
+    /// Output file (if not specified, output to stdout)
+    #[arg(short, long)]
+    output: Option<String>,
+
 }
 
 
@@ -44,7 +49,15 @@ fn main() {
     let encoded_table = tables::build_table(&nuc_tab);
 
     let reader = fasta::Reader::new(io::BufReader::new(std::fs::File::open(fname).unwrap()));
-    let mut writer = io::BufWriter::new(io::stdout());
+    let writer_r : Box<dyn Write> = match args.output {
+        None => Box::new(io::stdout()),
+        Some(s) => if s == "-" {
+                Box::new(io::stdout())
+            } else {
+                Box::new(std::fs::File::create(s).unwrap())
+            }
+    };
+    let mut writer = io::BufWriter::new(writer_r);
 
     let mut prot = Vec::new();
     let mut rseq = Vec::new();
