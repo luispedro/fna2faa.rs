@@ -2,6 +2,13 @@
 
 Very fast conversion of nucleotide to amino acids FASTA. Correctly handles ambiguous nucleotides in IUPAC notation (_i.e._, if if all possible underlying nucleotides translate to the same codon, then this codon is output).
 
+
+## Example
+
+```bash
+fna2faa examples/gmsc10.fna > gmsc10.faa
+```
+
 ## Speed
 
 Compared to the [C++ implementation](https://github.com/luispedro/fna2faa), this is >10x faster. It is even 7x than the C++ version using the same approach that does not support ambiguous nucleotides.

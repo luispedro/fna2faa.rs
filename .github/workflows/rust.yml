@@ -22,3 +22,7 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Run tool
+      run: |
+        cargo run examples/gmsc10.fna > examples/gmsc10.faa.out
+        diff examples/gmsc10.faa examples/gmsc10.faa.out
