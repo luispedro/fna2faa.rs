@@ -8,7 +8,7 @@ pub mod molbio;
 
 use clap::Parser;
 
-/// Simple program to greet a person
+/// Convert FASTA files with nucleotide sequences (FNA) to amino acid sequences (FAA)
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
