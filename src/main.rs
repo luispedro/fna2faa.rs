@@ -1,6 +1,7 @@
 use bio::io::fasta;
 use std::io;
 use std::io::Write;
+use atomic_write_file::AtomicWriteFile;
 
 
 pub mod tables;
@@ -35,7 +36,37 @@ struct Args {
 
 }
 
+enum Output {
+    Stdout,
+    File(AtomicWriteFile),
+}
 
+impl Write for Output {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        match self {
+            Output::Stdout => io::stdout().write(buf),
+            Output::File(f) => f.write(buf),
+        }
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        match self {
+            Output::Stdout => io::stdout().flush(),
+            Output::File(f) => f.flush(),
+        }
+    }
+}
+
+
+fn close_writer(output: Output) {
+    match output {
+        Output::Stdout => (),
+        Output::File(mut f) => {
+            f.flush().unwrap();
+            f.commit().unwrap()
+        }
+    }
+}
 
 fn main() {
     let args = Args::parse();
@@ -49,15 +80,10 @@ fn main() {
     let encoded_table = tables::build_table(&nuc_tab);
 
     let reader = fasta::Reader::new(io::BufReader::new(std::fs::File::open(fname).unwrap()));
-    let writer_r : Box<dyn Write> = match args.output {
-        None => Box::new(io::stdout()),
-        Some(s) => if s == "-" {
-                Box::new(io::stdout())
-            } else {
-                Box::new(std::fs::File::create(s).unwrap())
-            }
+    let mut writer = match args.output.unwrap_or("-".to_string()).as_str() {
+        "-" => Output::Stdout,
+        s => Output::File(AtomicWriteFile::options().open(s).unwrap()),
     };
-    let mut writer = io::BufWriter::new(writer_r);
 
     let mut prot = Vec::new();
     let mut rseq = Vec::new();
@@ -113,6 +139,6 @@ fn main() {
             writer.write(b"\n").unwrap();
         }
     }
-    writer.flush().unwrap();
+    close_writer(writer);
 }
 

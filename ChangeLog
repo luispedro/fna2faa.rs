@@ -1,5 +1,6 @@
 Version 0.2.0 (unreleased)
 	* fna2faa: add support for `-o` option to specify output file
+	* fna2faa: use atomic writing for `-o` option
 
 Version 0.1.0 on 9 April 2024
 	* fna2faa: first version
