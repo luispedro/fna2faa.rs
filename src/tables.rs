@@ -180,6 +180,14 @@ fn encode1slow(n: char) -> Option<usize> {
 }
 
 
+#[test]
+fn test_encode1slow() {
+    assert!(encode1slow('A') != encode1slow('C'));
+    assert!(encode1slow('A') == encode1slow('a'));
+    assert!(encode1slow('T') == encode1slow('U'));
+}
+
+
 fn generate_all_codons(alphabet : Vec<char>) -> Vec<String> {
     let mut codons = Vec::new();
 
